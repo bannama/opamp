@@ -86,10 +86,16 @@
    	</bean>
 	
 	<bean id="asyncSearchPublisher" class="com.oneops.util.AsyncSearchPublisher" init-method="init" destroy-method="destroy">
-        <property name="connFactory" ref="searchmqFactory" />
-        <property name="backlogThreshold" value="${SEARCH_WARN_MSG_THRESHOLD:100}" />
-        <property name="scanFolder" value="/opt/oneops/opamp/search/retry" />
-        <property name="name" value="opamp-search-publish" />
+		<property name="connFactory" ref="searchmqFactory" />
+		<property name="searchSender" ref="searchJmsSender" />
+	</bean>
+	
+	<bean id="searchJmsSender" class="com.oneops.util.SearchJmsSender" init-method="init" destroy-method="destroy">
+		<property name="name" value="opamp-search-publish" />
+		<property name="shortName" value="opamp" />
+		<property name="backlogThreshold" value="${SEARCH_WARN_MSG_THRESHOLD:10}" />
+		<property name="scanFolder" value="/opt/oneops/opamp/search/retry" />
+		<property name="minFreeSpaceMB" value="${SEARCH_RETRY_FREESPACE_MB:50}" />
 	</bean>
 	
     <bean id="searchBrokerURI" class="com.oneops.util.AMQConnectorURI">
@@ -104,17 +110,16 @@
                 <entry key="initialReconnectDelay" value="100"/>
                 <entry key="maxReconnectDelay" value="5000"/>
                 <entry key="maxReconnectAttempts" value="-1"/>
-                <entry key="backup" value="false"/>
                 <entry key="randomize" value="false"/>
-                <entry key="timeout" value="5000"/>
+                <entry key="timeout" value="3000"/>
             </util:map>
         </property>
     </bean>
 
     <bean id="searchmqFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
         <property name="brokerURL" value="#{searchBrokerURI.build()}"/>
-        <property name="userName" value="${AMQ_USER}"/>
-        <property name="password" value="${KLOOPZ_AMQ_PASS}"/>
+        <property name="userName" value="${SEARCHMQ_USER}"/>
+        <property name="password" value="${SEARCHMQ_PASS}"/>
     </bean>
 	
 	<bean id="notifier" class="com.oneops.opamp.service.Notifications">
